@@ -56,7 +56,7 @@ class HttpServiceTest {
         String response = httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID());
 
         Assertions.assertDoesNotThrow(() -> httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID()));
-        Assertions.assertEquals(response, stringResponse.getContent());
+        Assertions.assertEquals(stringResponse.getContent(), response);
     }
 
 
@@ -71,7 +71,7 @@ class HttpServiceTest {
         String response = httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID());
 
         Assertions.assertDoesNotThrow(() -> httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID()));
-        Assertions.assertEquals(response, stringResponse.getContent());
+        Assertions.assertEquals(stringResponse.getContent(), response);
     }
 
     @Test
@@ -137,7 +137,7 @@ class HttpServiceTest {
 
         Assertions.assertDoesNotThrow(() -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), MockUtils.getTitre(), TransactionType.DETAIL_TRANSACTION));
 
-        Assertions.assertEquals(response, stringResponse.getContent());
+        Assertions.assertEquals(stringResponse.getContent(), response);
 
     }
 
@@ -168,7 +168,7 @@ class HttpServiceTest {
 
         Assertions.assertDoesNotThrow(() -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION));
 
-        Assertions.assertEquals(response, stringResponse.getContent());
+        Assertions.assertEquals(stringResponse.getContent(), response);
 
     }
 
