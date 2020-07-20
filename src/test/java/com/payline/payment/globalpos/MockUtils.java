@@ -5,6 +5,7 @@ import com.payline.payment.globalpos.utils.constant.FormConfigurationKeys;
 import com.payline.payment.globalpos.utils.constant.PartnerConfigurationKeys;
 import com.payline.payment.globalpos.utils.constant.RequestContextKeys;
 import com.payline.payment.globalpos.utils.http.StringResponse;
+import com.payline.payment.globalpos.utils.i18n.I18nService;
 import com.payline.pmapi.bean.common.Amount;
 import com.payline.pmapi.bean.common.Buyer;
 import com.payline.pmapi.bean.configuration.PartnerConfiguration;
@@ -14,6 +15,8 @@ import com.payline.pmapi.bean.payment.*;
 import com.payline.pmapi.bean.payment.request.PaymentRequest;
 import com.payline.pmapi.bean.payment.request.RedirectionPaymentRequest;
 import com.payline.pmapi.bean.payment.request.TransactionStatusRequest;
+import com.payline.pmapi.bean.paymentform.bean.form.CardForm;
+import com.payline.pmapi.bean.paymentform.bean.form.CustomForm;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationRequest;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormLogoRequest;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
@@ -98,7 +101,8 @@ public class MockUtils {
      * Generate a valid {@link PaymentFormConfigurationRequest}.
      */
     public static PaymentFormConfigurationRequest aPaymentFormConfigurationRequest() {
-        return aPaymentFormConfigurationRequestBuilder().build();
+        return aPaymentFormConfigurationRequestBuilder()
+                .build();
     }
 
     /**
@@ -527,6 +531,18 @@ public class MockUtils {
                 .withSensitiveRequestData(requestSensitiveData);
     }
 
+    public static CustomForm aCustomForm() {
+        I18nService i18n = I18nService.getInstance();
+
+        return CardForm.builder()
+                .withSchemes(new ArrayList<>())
+                .withDescription(i18n.getMessage("customFormCard.description", Locale.FRANCE))
+                .withCustomFields(new ArrayList<>())
+                .withDisplayButton(true)
+                .withButtonText(i18n.getMessage("customFormCard.buttonText", Locale.FRANCE))
+                .build();
+    }
+
 
     public static String getTransacOK() {
         return "<xml>\n" +
@@ -550,7 +566,7 @@ public class MockUtils {
                 "<xml>\n" +
                 "  <http_status>200</http_status>\n" +
                 "  <error>-60</error>\n" +
-                "  <message>un message</message>\n" +
+                "  <message>step1KOError60</message>\n" +
                 "  <detail/>\n" +
                 "</xml>";
     }
@@ -564,7 +580,7 @@ public class MockUtils {
                 "<xml>\n" +
                 "  <http_status>200</http_status>\n" +
                 "  <error>-30</error>\n" +
-                "  <message>un message</message>\n" +
+                "  <message>step1KOError30</message>\n" +
                 "  <detail/>\n" +
                 "</xml>";
     }

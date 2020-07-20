@@ -103,6 +103,8 @@ class LogoPaymentFormConfigurationServiceTest {
 
         // then:
         assertNotNull(paymentFormLogo.getContentType());
+        assertEquals("image/png", paymentFormLogo.getContentType());
+
         assertNotNull(paymentFormLogo.getFile());
     }
 

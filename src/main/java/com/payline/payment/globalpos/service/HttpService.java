@@ -2,7 +2,6 @@ package com.payline.payment.globalpos.service;
 
 import com.payline.payment.globalpos.bean.configuration.RequestConfiguration;
 import com.payline.payment.globalpos.exception.InvalidDataException;
-import com.payline.payment.globalpos.service.impl.PaymentServiceImpl;
 import com.payline.payment.globalpos.utils.PluginUtils;
 import com.payline.payment.globalpos.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.globalpos.utils.constant.PartnerConfigurationKeys;
@@ -11,6 +10,7 @@ import com.payline.payment.globalpos.utils.http.StringResponse;
 import com.payline.payment.globalpos.utils.http.URIService;
 import com.payline.pmapi.logger.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.payline.payment.globalpos.utils.http.TransactionType;
 
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -75,91 +75,41 @@ public class HttpService {
             String error = "GetTransaction wrong data";
             LOGGER.error(error, response.getContent());
             throw new InvalidDataException(error);
-        } else {
-            return response.getContent();
         }
+
+        return response.getContent();
     }
 
-
-    /**
-     * Show all details of a check GlobalPOS
-     *
-     * @param configuration the request configuration
-     * @param numTransac    partnerTransactionID
-     * @return content of the StringResponse
-     */
-    public String getTitreDetailTransac(RequestConfiguration configuration, String numTransac, String cabTitre) {
+    public String manageTransact(RequestConfiguration configuration, String numTransact, String urlElement, TransactionType transactionType){
         verifyData(configuration);
 
         // create the valid url
         String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
         String guid = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.GUID).getValue();
-        URI url = URIService.createGetTitreDetailTransactionURL(baseUrl, guid, numTransac, cabTitre);
+        StringResponse response = new StringResponse();
+        String error = "";
 
-        StringResponse response = client.get(url, null);
-
-        if (!response.isSuccess()) {
-            String error = "GetTitreDetailTransac wrong data";
-            LOGGER.error(error, response.getContent());
-            throw new InvalidDataException(error);
-        } else {
-            return response.getContent();
+        switch (transactionType) {
+            case FINALISE_TRANSACTION:
+                response = client.get(URIService.createSetFinTransactionURL(baseUrl, guid, numTransact, urlElement),null);
+                error = "FINALISE_TRANSACTION wrong data";
+                break;
+            case DETAIL_TRANSACTION:
+                response = client.get(URIService.createGetTitreDetailTransactionURL(baseUrl, guid, numTransact, urlElement),null);
+                error = "DETAIL_TRANSACTION wrong data";
+                break;
+            case CANCEL_TRANSACTION:
+                response = client.get(URIService.createSetAnnulTitreTransactionURL(baseUrl, guid, numTransact, urlElement),null);
+                error = "CANCEL_TRANSACTION wrong data";
+                break;
         }
-    }
-
-    /**
-     * cancel a payment ticket in a transaction
-     *
-     * @param configuration the request configuration
-     * @param numTransac    the transaction in which we want to remove a payment ticket (partnerTransactionId)
-     * @param ticketId      the payment ticket Id
-     * @return
-     */
-    public String setAnnulTitreTransact(RequestConfiguration configuration, String numTransac, String ticketId) {
-        verifyData(configuration);
-
-        // create the valid url
-        String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
-        String guid = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.GUID).getValue();
-        URI url = URIService.createSetAnnulTitreTransactionURL(baseUrl, guid, numTransac, ticketId);
-
-        StringResponse response = client.get(url, null);
 
         if (!response.isSuccess()) {
-            String error = "setAnnulTitreTransac wrong data";
             LOGGER.error(error);
             throw new InvalidDataException(error);
-        } else {
-            return response.getContent();
         }
-    }
 
-
-    /**
-     * end a transaction for GlobalPOS
-     *
-     * @param configuration the request configuration
-     * @param numTransac    partnerTransactionID
-     * @param status        the status of the transaction COMMIT or ROLLBACK
-     * @return content of the StringResponse
-     */
-    public String setFinTransact(RequestConfiguration configuration, String numTransac, PaymentServiceImpl.STATUS status) {
-        verifyData(configuration);
-
-        // create the valid url
-        String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
-        String guid = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.GUID).getValue();
-        URI url = URIService.createSetFinTransactionURL(baseUrl, guid, numTransac, status.name());
-
-        StringResponse response = client.get(url, null);
-
-        if (!response.isSuccess()) {
-            String error = "setFinTransac wrong data";
-            LOGGER.error(error);
-            throw new InvalidDataException(error);
-        } else {
-            return response.getContent();
-        }
+        return response.getContent();
     }
 
     /**

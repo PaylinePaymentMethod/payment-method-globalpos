@@ -3,6 +3,7 @@ package com.payline.payment.globalpos.service.impl;
 import com.payline.payment.globalpos.bean.configuration.RequestConfiguration;
 import com.payline.payment.globalpos.exception.InvalidDataException;
 import com.payline.payment.globalpos.service.HttpService;
+import com.payline.payment.globalpos.utils.http.TransactionType;
 import com.payline.pmapi.bean.notification.request.NotificationRequest;
 import com.payline.pmapi.bean.notification.response.NotificationResponse;
 import com.payline.pmapi.bean.notification.response.impl.IgnoreNotificationResponse;
@@ -40,6 +41,6 @@ public class NotificationServiceImpl implements NotificationService {
         String name = status.name();
         LOGGER.info("Call Global pos API to finalize transaction {} with status:{}", partnerTransactionId, name);
 
-        httpService.setFinTransact(configuration, partnerTransactionId, status);
+        httpService.manageTransact(configuration,partnerTransactionId,status.name(), TransactionType.FINALISE_TRANSACTION);
     }
 }

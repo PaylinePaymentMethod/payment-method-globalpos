@@ -13,6 +13,7 @@ import com.payline.payment.globalpos.utils.PluginUtils;
 import com.payline.payment.globalpos.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.globalpos.utils.constant.FormConfigurationKeys;
 import com.payline.payment.globalpos.utils.constant.RequestContextKeys;
+import com.payline.payment.globalpos.utils.http.TransactionType;
 import com.payline.payment.globalpos.utils.i18n.I18nService;
 import com.payline.pmapi.bean.common.Amount;
 import com.payline.pmapi.bean.common.FailureCause;
@@ -177,7 +178,8 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal paylineAmount = AmountParse.splitDecimal(request.getAmount());
 
         // add a payment ticket to the transaction created in step1
-        String stringResponse = httpService.getTitreDetailTransac(configuration, numTransac, cabTitre);
+
+        String stringResponse = httpService.manageTransact(configuration,numTransac,cabTitre, TransactionType.DETAIL_TRANSACTION);
         GetTitreDetailTransac response = GetTitreDetailTransac.fromXml(stringResponse);
 
         PaymentResponse paymentResponse;
@@ -192,7 +194,8 @@ public class PaymentServiceImpl implements PaymentService {
             switch (gpAmount.compareTo(paylineAmount)) {
                 case 0:
                     // every thing is OK, finalize transaction
-                    stringResponse = httpService.setFinTransact(configuration, numTransac, STATUS.COMMIT);
+
+                    stringResponse = httpService.manageTransact(configuration, numTransac, STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION);
                     paymentResponse = handleSetFinTransacResponse(stringResponse, numTransac);
                     break;
                 case -1:
@@ -230,7 +233,9 @@ public class PaymentServiceImpl implements PaymentService {
                     // the payment ticket is too big,cancel it and return the payment ticket form again (with an additional error message)
 
                     // cancel the payment ticket
-                    stringResponse = httpService.setAnnulTitreTransact(configuration, numTransac, response.getId());
+
+                    stringResponse = httpService.manageTransact(configuration, numTransac, response.getId(), TransactionType.CANCEL_TRANSACTION);
+
                     paymentResponse = handleSetAnnulTransacResponse(stringResponse, numTransac, request);
                     break;
             }

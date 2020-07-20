@@ -7,6 +7,7 @@ import com.payline.payment.globalpos.service.impl.PaymentServiceImpl;
 import com.payline.payment.globalpos.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.globalpos.utils.http.HttpClient;
 import com.payline.payment.globalpos.utils.http.StringResponse;
+import com.payline.payment.globalpos.utils.http.TransactionType;
 import com.payline.pmapi.bean.payment.ContractProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,6 @@ class HttpServiceTest {
 
     private RequestConfiguration configuration = new RequestConfiguration(
             MockUtils.aContractConfiguration()
-            , MockUtils.anEnvironment()
             , MockUtils.aPartnerConfiguration()
     );
 
@@ -53,8 +53,10 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
+        String response = httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID());
+
         Assertions.assertDoesNotThrow(() -> httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID()));
-        Assertions.assertEquals(MockUtils.getTransacOK(), stringResponse.getContent());
+        Assertions.assertEquals(response, stringResponse.getContent());
     }
 
 
@@ -66,8 +68,10 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
+        String response = httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID());
+
         Assertions.assertDoesNotThrow(() -> httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID()));
-        Assertions.assertEquals(MockUtils.getTransacKO(), stringResponse.getContent());
+        Assertions.assertEquals(response, stringResponse.getContent());
     }
 
     @Test
@@ -129,8 +133,11 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
-        Assertions.assertDoesNotThrow(() -> httpService.getTitreDetailTransac(configuration, MockUtils.getNumTransac(), MockUtils.getTitre()));
-        Assertions.assertEquals(MockUtils.getTitreTransacOK(), stringResponse.getContent());
+        String response = httpService.manageTransact(configuration, MockUtils.getNumTransac(), MockUtils.getTitre(), TransactionType.DETAIL_TRANSACTION);
+
+        Assertions.assertDoesNotThrow(() -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), MockUtils.getTitre(), TransactionType.DETAIL_TRANSACTION));
+
+        Assertions.assertEquals(response, stringResponse.getContent());
 
     }
 
@@ -143,9 +150,9 @@ class HttpServiceTest {
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.getTitreDetailTransac(configuration, MockUtils.getNumTransac(), MockUtils.getTitre()));
+                () -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), MockUtils.getTitre(), TransactionType.DETAIL_TRANSACTION));
 
-        Assertions.assertEquals("GetTitreDetailTransac wrong data", thrown.getMessage());
+        Assertions.assertEquals("DETAIL_TRANSACTION wrong data", thrown.getMessage());
 
     }
 
@@ -157,8 +164,11 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
-        Assertions.assertDoesNotThrow(() -> httpService.setFinTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT));
-        Assertions.assertEquals(MockUtils.setFinTransacOK(), stringResponse.getContent());
+        String response = httpService.manageTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION);
+
+        Assertions.assertDoesNotThrow(() -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION));
+
+        Assertions.assertEquals(response, stringResponse.getContent());
 
     }
 
@@ -171,10 +181,9 @@ class HttpServiceTest {
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.setFinTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT));
+                () -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION));
 
-        Assertions.assertEquals("setFinTransac wrong data", thrown.getMessage());
-
+        Assertions.assertEquals("FINALISE_TRANSACTION wrong data", thrown.getMessage());
     }
 
     @Test
@@ -184,10 +193,10 @@ class HttpServiceTest {
                 , "true"
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
-        String s = httpService.setAnnulTitreTransact(configuration, MockUtils.getNumTransac(), "123");
 
+        String s = httpService.manageTransact(configuration, MockUtils.getNumTransac(), "123", TransactionType.CANCEL_TRANSACTION);
 
         Assertions.assertNotNull(s);
-
+        Assertions.assertEquals("true", s);
     }
 }

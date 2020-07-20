@@ -95,5 +95,6 @@ class ConfigurationServiceImplTest {
 
         // then: the method returns the name
         assertNotNull(name);
+        assertEquals("globalpos", name);
     }
 }

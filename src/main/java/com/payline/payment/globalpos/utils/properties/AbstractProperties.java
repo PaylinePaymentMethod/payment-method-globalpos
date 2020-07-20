@@ -35,21 +35,17 @@ public abstract class AbstractProperties {
             throw new PluginException("Properties filename must not be null or empty");
         }
 
-        InputStream inputStream = AbstractProperties.class.getClassLoader().getResourceAsStream(filename);
-        if (inputStream == null) {
-            throw new PluginException("Cannot find properties file: " + filename);
+        try (InputStream inputStream = AbstractProperties.class.getClassLoader().getResourceAsStream(filename)) {
+            if (inputStream == null) {
+                throw new PluginException("Cannot find properties file: " + filename);
+            }
+
+            this.properties.load(inputStream);
+
+        } catch (IOException e) {
+            throw new PluginException("Error with the stream: " + filename, e);
         }
 
-        try {
-            this.properties.load(inputStream);
-        } catch (IOException e) {
-            throw new PluginException("Unable to load properties files: " + filename, e);
-        }
-        try {
-            inputStream.close();
-        } catch (IOException e) {
-            throw new PluginException("Unable to close the stream: " + filename, e);
-        }
     }
 
     /**
