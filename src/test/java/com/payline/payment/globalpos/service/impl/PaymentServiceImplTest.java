@@ -33,10 +33,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Currency;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.payline.payment.globalpos.utils.constant.RequestContextKeys.STEP2;
 import static com.payline.payment.globalpos.utils.constant.RequestContextKeys.STEP3;
@@ -134,9 +131,11 @@ class PaymentServiceImplTest {
     void step2CheckBigger() {
         PaymentRequest request = MockUtils.aPaylinePaymentRequestBuilder()
                 .withAmount(MockUtils.aPaylineAmount(500))
+                .withLocale(Locale.FRANCE)
                 .withRequestContext(MockUtils.aRequestContextBuilderStep(STEP2, MockUtils.getNumTransac()).build())
                 .withPaymentFormContext(MockUtils.aPaymentFormContextStep2(MockUtils.getTitre()))
                 .build();
+
         Mockito.doReturn(MockUtils.getTitreTransacOK()).when(httpService).manageTransact(any(), any(), any(),eq(TransactionType.DETAIL_TRANSACTION));
         Mockito.doReturn("true").when(httpService).manageTransact(any(), any(), any(), eq(TransactionType.CANCEL_TRANSACTION));
         PaymentResponse response = service.step2(request);
