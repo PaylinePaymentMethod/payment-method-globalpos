@@ -203,6 +203,8 @@ public class PaymentServiceImpl implements PaymentService {
 
                     // create the card form
                     CustomForm form = CardForm.builder()
+                            .withCvx(true)
+                            .withExpirationDate(true)
                             .withSchemes(new ArrayList<>())
                             .withDescription(i18n.getMessage("customFormCard.description", request.getLocale()))
                             .withCustomFields(new ArrayList<>())
