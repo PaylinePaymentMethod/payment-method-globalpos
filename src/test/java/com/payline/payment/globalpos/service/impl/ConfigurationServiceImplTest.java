@@ -46,7 +46,7 @@ class ConfigurationServiceImplTest {
         List<AbstractParameter> parameters = configurationServiceImpl.getParameters(Locale.FRANCE);
 
         Assertions.assertNotNull(parameters);
-        Assertions.assertEquals(3, parameters.size());
+        Assertions.assertEquals(9, parameters.size());
 
         for (AbstractParameter p : parameters) {
             Assertions.assertNotNull(p.getKey());

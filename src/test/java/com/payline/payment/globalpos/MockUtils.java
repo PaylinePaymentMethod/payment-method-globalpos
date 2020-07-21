@@ -72,6 +72,10 @@ public class MockUtils {
     @Getter
     private static final String numTransac = "5e7db72846ebd";
 
+    private static final String id = "1233123";
+
+    private static final String password = "password";
+
 
     /**------------------------------------------------------------------------------------------------------------------*/
 
@@ -383,6 +387,8 @@ public class MockUtils {
         contractProperties.put(ContractConfigurationKeys.GUID, new ContractProperty(guid));
         contractProperties.put(ContractConfigurationKeys.CODEMAGASIN, new ContractProperty(codeMagasin));
         contractProperties.put(ContractConfigurationKeys.NUMEROCAISSE, new ContractProperty(numeroCaisse));
+        contractProperties.put(ContractConfigurationKeys.ID, new ContractProperty(id));
+        contractProperties.put(ContractConfigurationKeys.PASSWORD, new ContractProperty(password));
         return new ContractConfiguration("globalpos", contractProperties);
     }
 
