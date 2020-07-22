@@ -2,7 +2,13 @@ package com.payline.payment.globalpos.service;
 
 import com.payline.payment.globalpos.MockUtils;
 import com.payline.payment.globalpos.bean.configuration.RequestConfiguration;
+import com.payline.payment.globalpos.bean.request.CreateCardBody;
+import com.payline.payment.globalpos.bean.request.LoginBody;
+import com.payline.payment.globalpos.bean.response.GetAuthToken;
+import com.payline.payment.globalpos.bean.response.JsonBeanResponse;
+import com.payline.payment.globalpos.bean.response.SetCreateCard;
 import com.payline.payment.globalpos.exception.InvalidDataException;
+import com.payline.payment.globalpos.exception.PluginException;
 import com.payline.payment.globalpos.service.impl.PaymentServiceImpl;
 import com.payline.payment.globalpos.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.globalpos.utils.http.HttpClient;
@@ -198,5 +204,142 @@ class HttpServiceTest {
 
         Assertions.assertNotNull(s);
         Assertions.assertEquals("true", s);
+    }
+
+    @Test
+    void getAuthToken() {
+        // create mock
+        String token = "{\n" +
+                "    \"error\": 0,\n" +
+                "    \"message\": \"\",\n" +
+                "    \"token\": \"thisIsAToken\"\n" +
+                "}";
+
+        StringResponse stringResponse = MockUtils.mockStringResponse(200
+                , "OK"
+                , token
+                , null);
+        Mockito.doReturn(stringResponse).when(client).post(any(), any(), any());
+
+        // call method
+        LoginBody body = new LoginBody("login", "password", "guid");
+        GetAuthToken authToken = httpService.getAuthToken(configuration, body);
+
+        // assertions
+        Assertions.assertNotNull(authToken);
+        Assertions.assertEquals("thisIsAToken", authToken.getToken());
+    }
+
+    @Test
+    void getAuthTokenKO() {
+        // create mock
+        StringResponse stringResponse = MockUtils.mockStringResponse(400
+                , "OK"
+                , "foo"
+                , null);
+        Mockito.doReturn(stringResponse).when(client).post(any(), any(), any());
+
+        // call method
+        LoginBody body = new LoginBody("login", "password", "guid");
+        Assertions.assertThrows(PluginException.class, () -> httpService.getAuthToken(configuration, body));
+    }
+
+    @Test
+    void setCreateCard() {
+        // create mock
+        String card = "{\n" +
+                "    \"error\": 0,\n" +
+                "    \"message\": \"\",\n" +
+                "    \"cartes\": {\n" +
+                "        \"cardid\": \"123\",\n" +
+                "        \"cardid2\": \"456\",\n" +
+                "        \"cardcvv\": \"789\",\n" +
+                "        \"montant\": 1000\n" +
+                "    }\n" +
+                "}";
+
+        StringResponse stringResponse = MockUtils.mockStringResponse(200
+                , "OK"
+                , card
+                , null);
+        Mockito.doReturn(stringResponse).when(client).post(any(), any(), any());
+        // call method
+        CreateCardBody body = CreateCardBody.builder()
+                .action("foo")
+                .dateTransac("foo")
+                .email("foo")
+                .magCaisse("foo")
+                .montant(1)
+                .numTransac("foo")
+                .typeTitre("foo")
+                .build();
+        SetCreateCard cardResponse = httpService.setCreateCard(configuration, "token", body);
+
+        //assertions
+        Assertions.assertNotNull(cardResponse);
+        Assertions.assertNotNull( cardResponse.getCard());
+        Assertions.assertEquals( "123", cardResponse.getCard().getCardId());
+        Assertions.assertEquals( "456", cardResponse.getCard().getCardId2());
+        Assertions.assertEquals( "789", cardResponse.getCard().getCardCvv());
+        Assertions.assertEquals( "1000", cardResponse.getCard().getAmount());
+
+    }
+
+    @Test
+    void setCreateCardKO() {
+        // create mock
+        StringResponse stringResponse = MockUtils.mockStringResponse(400
+                , "OK"
+                , "foo"
+                , null);
+        Mockito.doReturn(stringResponse).when(client).post(any(), any(), any());
+
+        // call method
+        CreateCardBody body = CreateCardBody.builder()
+                .action("foo")
+                .dateTransac("foo")
+                .email("foo")
+                .magCaisse("foo")
+                .montant(1)
+                .numTransac("foo")
+                .typeTitre("foo")
+                .build();
+        Assertions.assertThrows(PluginException.class, () -> httpService.setCreateCard(configuration, "token", body));
+    }
+
+    @Test
+    void setGenCardMail() {
+        // create mock
+        String mail = "{\n" +
+                "    \"error\": 0,\n" +
+                "    \"message\": \"\"\n" +
+                "}";
+
+        StringResponse stringResponse = MockUtils.mockStringResponse(200
+                , "OK"
+                , mail
+                , null);
+        Mockito.doReturn(stringResponse).when(client).get(any(), any());
+
+        // call method
+        JsonBeanResponse beanResponse = httpService.setGenCardMail(configuration, "token", "foo");
+
+        // assertions
+        Assertions.assertNotNull(beanResponse);
+        Assertions.assertEquals(0, beanResponse.getError());
+    }
+
+    @Test
+    void setGenCardMailKO() {
+        // create mock
+        StringResponse stringResponse = MockUtils.mockStringResponse(400
+                , "OK"
+                , "foo"
+                , null);
+        Mockito.doReturn(stringResponse).when(client).get(any(), any());
+
+        // call method
+        Assertions.assertThrows(PluginException.class, () -> httpService.setGenCardMail(configuration, "token", "foo"));
+
     }
 }

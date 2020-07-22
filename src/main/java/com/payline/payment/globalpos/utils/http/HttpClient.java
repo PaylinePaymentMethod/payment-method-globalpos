@@ -9,14 +9,17 @@ import org.apache.http.Header;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 public class HttpClient {
     private static final Logger LOGGER = LogManager.getLogger(HttpClient.class);
@@ -116,5 +119,26 @@ public class HttpClient {
 
         // Execute request
         return this.execute(httpGet);
+    }
+
+    /**
+     * Manage Post API call
+     *
+     * @param uri     the url to call
+     * @param headers header(s) of the request
+     * @param body    body of the request
+     * @return
+     */
+    public StringResponse post(URI uri, Header[] headers, String body) {
+        final HttpPost httpPost = new HttpPost(uri);
+        httpPost.setHeaders(headers);
+
+        // Body
+        if (body != null) {
+            httpPost.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
+        }
+
+        // Execute request
+        return this.execute(httpPost);
     }
 }

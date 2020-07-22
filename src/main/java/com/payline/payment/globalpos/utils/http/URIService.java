@@ -23,6 +23,16 @@ public class URIService {
     private static final String CAB_TITRE = "cabtitre";
     private static final String STATUS = "statut";
 
+    // refund paths
+    private static final String INDEX = "index.php";
+    private static final String REFUND_BASE_PATH = "Wscardb2c";
+    private static final String GET_AUTH_TOKEN = "getAuthToken";
+    private static final String SET_CREATE_CARD = "setCreatCard";
+    private static final String SET_GEN_CARD_MAIL = "setGenCardMail";
+
+    // refund parameters
+    private static final String NUM_CARD = "numcarte";
+    private static final String FLAG_MAIL = "flagmail";
 
     private URIService() {
         throw new IllegalStateException("Utility class");
@@ -117,6 +127,63 @@ public class URIService {
             return builder.build().toURL().toURI();
         } catch (MalformedURLException | URISyntaxException e) {
             throw new InvalidDataException("Unable to create URL to call SetFinTransaction", e);
+        }
+    }
+
+    /**
+     * Create the URL with all values needed to ask for a token
+     *
+     * @param baseUrl
+     * @return
+     */
+    public static URI createGetAuthTokenURL(String baseUrl) {
+        try {
+            URIBuilder builder = new URIBuilder(baseUrl);
+            builder.setPathSegments(INDEX, REFUND_BASE_PATH, GET_AUTH_TOKEN);
+
+            return builder.build().toURL().toURI();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new InvalidDataException("Unable to create URL to call getAuthToken", e);
+        }
+    }
+
+    /**
+     * Create the URL with all values needed to ask for a new payment title
+     *
+     * @param baseUrl
+     * @return
+     */
+    public static URI createSetCreateCardURL(String baseUrl) {
+        try {
+            URIBuilder builder = new URIBuilder(baseUrl);
+            builder.setPathSegments(INDEX, REFUND_BASE_PATH, SET_CREATE_CARD);
+
+            return builder.build().toURL().toURI();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new InvalidDataException("Unable to create URL to call setCreatCard", e);
+        }
+    }
+
+    /**
+     * Create the URL with all values needed to validate the new payment title creation
+     *
+     * @param baseUrl
+     * @param cardId
+     * @param flagmail
+     * @return
+     */
+    public static URI createSetGenCardMailURL(String baseUrl, String cardId, String flagmail) {
+        try {
+            URIBuilder builder = new URIBuilder(baseUrl);
+            builder.setPathSegments(INDEX, REFUND_BASE_PATH, SET_GEN_CARD_MAIL);
+
+            builder.addParameter(NUM_CARD, cardId);
+            builder.addParameter(FLAG_MAIL, flagmail);
+
+
+            return builder.build().toURL().toURI();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new InvalidDataException("Unable to create URL to call setGenMail", e);
         }
     }
 

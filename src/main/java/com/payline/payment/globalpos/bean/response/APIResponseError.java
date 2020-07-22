@@ -14,7 +14,7 @@ public class APIResponseError {
     @JsonProperty("http_status")
     private String httpStatus;
     @Getter
-    private String error;
+    private int error;
     @Getter
     private String message;
     @Getter

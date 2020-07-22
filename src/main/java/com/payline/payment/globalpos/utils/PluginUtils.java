@@ -4,9 +4,12 @@ package com.payline.payment.globalpos.utils;
 import com.payline.payment.globalpos.exception.InvalidDataException;
 import com.payline.pmapi.bean.common.FailureCause;
 
+import java.text.SimpleDateFormat;
 import java.time.YearMonth;
+import java.util.Date;
 
 public class PluginUtils {
+    private static final String PIPE = "|";
 
 
     private PluginUtils() {
@@ -49,18 +52,18 @@ public class PluginUtils {
      * @param errorCode
      * @return FailureCause
      */
-    public static FailureCause getFailureCause(String errorCode) {
+    public static FailureCause getFailureCause(int errorCode) {
         FailureCause cause;
 
         switch (errorCode) {
-            case "-21":
-            case "-30":
+            case -21:
+            case -30:
                 cause = FailureCause.COMMUNICATION_ERROR;
                 break;
 
-            case "-60":
-            case "-70":
-            case "-80":
+            case -60:
+            case -70:
+            case -80:
                 cause = FailureCause.REFUSED;
                 break;
 
@@ -68,5 +71,27 @@ public class PluginUtils {
                 cause = FailureCause.INVALID_DATA;
         }
         return cause;
+    }
+
+    /**
+     * compute the date of the day for initialise the transaction
+     * date have format yyyyMMjjHHMMSS
+     *
+     * @return String the date of the day
+     */
+    public static String computeDate() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+        return format.format(new Date());
+    }
+
+    /**
+     * concatenate storeCode and checkoutNumber with a pipe to obtain the final shopId
+     * @param storeCode
+     * @param checkoutNumber
+     * @return
+     */
+    public static String createStoreId(String storeCode, String checkoutNumber){
+        if (isEmpty(checkoutNumber)) checkoutNumber = "00"; // default Value for the "numéro de caisse"
+        return String.join(PIPE, storeCode, checkoutNumber);
     }
 }

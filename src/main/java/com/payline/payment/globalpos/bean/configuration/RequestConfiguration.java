@@ -6,6 +6,7 @@ import com.payline.pmapi.bean.configuration.request.ContractParametersCheckReque
 import com.payline.pmapi.bean.payment.ContractConfiguration;
 import com.payline.pmapi.bean.payment.request.NotifyTransactionStatusRequest;
 import com.payline.pmapi.bean.payment.request.PaymentRequest;
+import com.payline.pmapi.bean.refund.request.RefundRequest;
 
 /**
  * Generic class that supports any type of request's configuration.
@@ -40,6 +41,10 @@ public class RequestConfiguration {
     }
 
     public static RequestConfiguration build(PaymentRequest request) {
+        return new RequestConfiguration(request.getContractConfiguration(), request.getPartnerConfiguration());
+    }
+
+    public static RequestConfiguration build(RefundRequest request) {
         return new RequestConfiguration(request.getContractConfiguration(), request.getPartnerConfiguration());
     }
 

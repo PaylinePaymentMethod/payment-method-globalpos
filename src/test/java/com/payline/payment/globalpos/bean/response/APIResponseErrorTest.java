@@ -16,7 +16,7 @@ class APIResponseErrorTest {
         Assertions.assertNotNull(value.getError());
         Assertions.assertNotNull(value.getMessage());
         Assertions.assertEquals("200", value.getHttpStatus());
-        Assertions.assertEquals("-50", value.getError());
+        Assertions.assertEquals(-50, value.getError());
         Assertions.assertEquals("Magasin inconnu de l'enseigne", value.getMessage());
     }
 

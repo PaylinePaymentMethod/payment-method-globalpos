@@ -1,26 +1,31 @@
 package com.payline.payment.globalpos.service;
 
 import com.payline.payment.globalpos.bean.configuration.RequestConfiguration;
+import com.payline.payment.globalpos.bean.request.CreateCardBody;
+import com.payline.payment.globalpos.bean.request.LoginBody;
+import com.payline.payment.globalpos.bean.response.GetAuthToken;
+import com.payline.payment.globalpos.bean.response.JsonBeanResponse;
+import com.payline.payment.globalpos.bean.response.SetCreateCard;
 import com.payline.payment.globalpos.exception.InvalidDataException;
 import com.payline.payment.globalpos.utils.PluginUtils;
 import com.payline.payment.globalpos.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.globalpos.utils.constant.PartnerConfigurationKeys;
 import com.payline.payment.globalpos.utils.http.HttpClient;
 import com.payline.payment.globalpos.utils.http.StringResponse;
+import com.payline.payment.globalpos.utils.http.TransactionType;
 import com.payline.payment.globalpos.utils.http.URIService;
 import com.payline.pmapi.logger.LogManager;
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 import org.apache.logging.log4j.Logger;
-import com.payline.payment.globalpos.utils.http.TransactionType;
 
 import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class HttpService {
     private static final Logger LOGGER = LogManager.getLogger(HttpService.class);
     private HttpClient client = HttpClient.getInstance();
 
-    private static final String PIPE = "|";
+    private static final String TOKEN = "token";
 
     private HttpService() {
     }
@@ -61,11 +66,11 @@ public class HttpService {
         if (PluginUtils.isEmpty(storeCode)) {
             throw new InvalidDataException("CODEMAGASIN is missing");
         }
-        String storeId = String.join(PIPE, storeCode, checkoutNumber);
+        String storeId = PluginUtils.createStoreId(storeCode, checkoutNumber);
 
         // create the valid url
         String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
-        URI url = URIService.createGetTransactionURL(baseUrl, guid, storeId, computeDate(), transactionId);
+        URI url = URIService.createGetTransactionURL(baseUrl, guid, storeId, PluginUtils.computeDate(), transactionId);
 
         // call API
         StringResponse response = client.get(url, null);
@@ -80,7 +85,7 @@ public class HttpService {
         return response.getContent();
     }
 
-    public String manageTransact(RequestConfiguration configuration, String numTransact, String urlElement, TransactionType transactionType){
+    public String manageTransact(RequestConfiguration configuration, String numTransact, String urlElement, TransactionType transactionType) {
         verifyData(configuration);
 
         // create the valid url
@@ -91,15 +96,15 @@ public class HttpService {
 
         switch (transactionType) {
             case FINALISE_TRANSACTION:
-                response = client.get(URIService.createSetFinTransactionURL(baseUrl, guid, numTransact, urlElement),null);
+                response = client.get(URIService.createSetFinTransactionURL(baseUrl, guid, numTransact, urlElement), null);
                 error = "FINALISE_TRANSACTION wrong data";
                 break;
             case DETAIL_TRANSACTION:
-                response = client.get(URIService.createGetTitreDetailTransactionURL(baseUrl, guid, numTransact, urlElement),null);
+                response = client.get(URIService.createGetTitreDetailTransactionURL(baseUrl, guid, numTransact, urlElement), null);
                 error = "DETAIL_TRANSACTION wrong data";
                 break;
             case CANCEL_TRANSACTION:
-                response = client.get(URIService.createSetAnnulTitreTransactionURL(baseUrl, guid, numTransact, urlElement),null);
+                response = client.get(URIService.createSetAnnulTitreTransactionURL(baseUrl, guid, numTransact, urlElement), null);
                 error = "CANCEL_TRANSACTION wrong data";
                 break;
         }
@@ -112,12 +117,76 @@ public class HttpService {
         return response.getContent();
     }
 
+
+    public GetAuthToken getAuthToken(RequestConfiguration configuration, LoginBody body) {
+        verifyData(configuration);
+
+        // create the url
+        String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
+        URI uri = URIService.createGetAuthTokenURL(baseUrl);
+
+        // call API
+        StringResponse response = client.post(uri, null, body.toJson());
+
+        // verify the response
+        if (!response.isSuccess()) {
+            String errorMessage = "GET_AUTH_TOKEN error";
+            LOGGER.error(errorMessage, errorMessage);
+            throw new InvalidDataException(errorMessage);
+        }
+        return GetAuthToken.fromJson(response.getContent());
+    }
+
+
+    public SetCreateCard setCreateCard(RequestConfiguration configuration, String token, CreateCardBody body) {
+        verifyData(configuration);
+
+        // create the url
+        String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
+        URI uri = URIService.createSetCreateCardURL(baseUrl);
+        Header[] headers = new Header[]{new BasicHeader(TOKEN, token)};
+
+        // call API
+        StringResponse response = client.post(uri, headers, body.toJson());
+
+        // verify the response
+        if (!response.isSuccess()) {
+            String errorMessage = "SET_CREATE_CARD error";
+            LOGGER.error(errorMessage, errorMessage);
+            throw new InvalidDataException(errorMessage);
+        }
+
+        return SetCreateCard.fromJson(response.getContent());
+    }
+
+    public JsonBeanResponse setGenCardMail(RequestConfiguration configuration, String token, String cardId) {
+        verifyData(configuration);
+
+        // create the url
+        String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
+        URI uri = URIService.createSetGenCardMailURL(baseUrl, cardId, "1"); // we always want the API to send an email
+        Header[] headers = new Header[]{new BasicHeader(TOKEN, token)};
+
+        // call API
+        StringResponse response = client.get(uri, headers);
+
+        // verify response
+        if (!response.isSuccess()) {
+            String errorMessage = "SET_GEN_CARD_MAIL error";
+            LOGGER.error(errorMessage, errorMessage);
+            throw new InvalidDataException(errorMessage);
+        }
+
+        return JsonBeanResponse.fromJson(response.getContent());
+    }
+
+
     /**
      * Check if the datas required for all request are empty or not
      *
      * @param configuration the request configuration
      */
-    public void verifyData(RequestConfiguration configuration) {
+    private void verifyData(RequestConfiguration configuration) {
         if (configuration.getPartnerConfiguration() == null) {
             throw new InvalidDataException("PartnerConfiguration is empty");
         }
@@ -133,16 +202,5 @@ public class HttpService {
         if (configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.GUID) == null) {
             throw new InvalidDataException("GUID is missing");
         }
-    }
-
-    /**
-     * compute the date of the day for initialise the transaction
-     * date have format yyyyMMjjHHMMSS
-     *
-     * @return String the date of the day
-     */
-    public String computeDate() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-        return format.format(new Date());
     }
 }
