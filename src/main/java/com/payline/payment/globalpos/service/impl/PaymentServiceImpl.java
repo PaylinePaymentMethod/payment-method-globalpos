@@ -19,17 +19,12 @@ import com.payline.pmapi.bean.common.Amount;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.payment.RequestContext;
 import com.payline.pmapi.bean.payment.request.PaymentRequest;
-import com.payline.pmapi.bean.payment.response.PaymentMode;
-import com.payline.pmapi.bean.payment.response.PaymentModeCard;
 import com.payline.pmapi.bean.payment.response.PaymentResponse;
-import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.Card;
 import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.EmptyTransactionDetails;
-import com.payline.pmapi.bean.payment.response.impl.PaymentResponseDoPayment;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFormUpdated;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseSuccess;
 import com.payline.pmapi.bean.paymentform.bean.field.*;
-import com.payline.pmapi.bean.paymentform.bean.form.CardForm;
 import com.payline.pmapi.bean.paymentform.bean.form.CustomForm;
 import com.payline.pmapi.bean.paymentform.response.configuration.PaymentFormConfigurationResponse;
 import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseSpecific;
@@ -38,12 +33,10 @@ import com.payline.pmapi.service.PaymentService;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
 import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.payline.payment.globalpos.utils.constant.RequestContextKeys.STEP2;
-import static com.payline.payment.globalpos.utils.constant.RequestContextKeys.STEP3;
 
 public class PaymentServiceImpl implements PaymentService {
     private static final Logger LOGGER = LogManager.getLogger(PaymentServiceImpl.class);
@@ -71,10 +64,6 @@ public class PaymentServiceImpl implements PaymentService {
             } else if (STEP2.equals(step)) {
                 // add the received payment ticket to the transaction and then return different responses from the ticket amount
                 return step2(request);
-            } else if (STEP3.equals(step)) {
-                // only if complementary card payment
-                // return a PaymentResponseDoPayment
-                return step3(request);
             } else {
                 // should never append
                 String errorMessage = "Unknown step";
@@ -173,13 +162,13 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // extract needed data
-        String numTransac = request.getRequestContext().getRequestData().get(RequestContextKeys.NUMTRANSAC);
+        String partnerTransactionId = request.getRequestContext().getRequestData().get(RequestContextKeys.NUMTRANSAC);
         String cabTitre = request.getPaymentFormContext().getPaymentFormParameter().get(FormConfigurationKeys.CABTITRE);
         BigDecimal paylineAmount = AmountParse.splitDecimal(request.getAmount());
 
         // add a payment ticket to the transaction created in step1
 
-        String stringResponse = httpService.manageTransact(configuration,numTransac,cabTitre, TransactionType.DETAIL_TRANSACTION);
+        String stringResponse = httpService.manageTransact(configuration, partnerTransactionId, cabTitre, TransactionType.DETAIL_TRANSACTION);
         GetTitreDetailTransac response = GetTitreDetailTransac.fromXml(stringResponse);
 
         PaymentResponse paymentResponse;
@@ -195,50 +184,29 @@ public class PaymentServiceImpl implements PaymentService {
                 case 0:
                     // every thing is OK, finalize transaction
 
-                    stringResponse = httpService.manageTransact(configuration, numTransac, STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION);
-                    paymentResponse = handleSetFinTransacResponse(stringResponse, numTransac);
+                    stringResponse = httpService.manageTransact(configuration, partnerTransactionId, STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION);
+                    paymentResponse = handleSetFinTransacResponse(stringResponse, partnerTransactionId);
                     break;
                 case -1:
-                    // a complementary payment is needed, return a CreditCard form
+                    // a complementary payment is needed, return paymentResponseSuccess with a reservedAmount
+                    Amount reservedAmount = new Amount(AmountParse.createBigInteger(response.getMontant(), request.getAmount().getCurrency()), request.getAmount().getCurrency());
 
-                    // create the card form
-                    CustomForm form = CardForm.builder()
-                            .withCvx(true)
-                            .withExpirationDate(true)
-                            .withSchemes(new ArrayList<>())
-                            .withDescription(i18n.getMessage("customFormCard.description", request.getLocale()))
-                            .withCustomFields(new ArrayList<>())
-                            .withDisplayButton(true)
-                            .withButtonText(i18n.getMessage("customFormCard.buttonText", request.getLocale()))
-                            .build();
-                    PaymentFormConfigurationResponse paymentFormConfigurationResponse = PaymentFormConfigurationResponseSpecific.PaymentFormConfigurationResponseSpecificBuilder
-                            .aPaymentFormConfigurationResponseSpecific()
-                            .withPaymentForm(form)
-                            .build();
 
-                    // create RequestContext for the next step (STEP3)
-                    Map<String, String> requestContextMap = new HashMap<>();
-                    requestContextMap.put(RequestContextKeys.CONTEXT_DATA_STEP, STEP3);
-                    requestContextMap.put(RequestContextKeys.NUMTRANSAC, numTransac);
-                    RequestContext requestContext = RequestContext.RequestContextBuilder.aRequestContext()
-                            .withRequestData(requestContextMap)
+                    paymentResponse = PaymentResponseSuccess.PaymentResponseSuccessBuilder
+                            .aPaymentResponseSuccess()
+                            .withStatusCode(response.getCodeErreur())
+                            .withPartnerTransactionId(partnerTransactionId)
+                            .withReservedAmount(reservedAmount)
+                            .withTransactionDetails(new EmptyTransactionDetails())
                             .build();
-
-                    paymentResponse = PaymentResponseFormUpdated.PaymentResponseFormUpdatedBuilder.aPaymentResponseFormUpdated()
-                            .withRequestContext(requestContext)
-                            .withPaymentFormConfigurationResponse(paymentFormConfigurationResponse)
-                            .build();
-
                     break;
                 case 1:
                 default:
                     // the payment ticket is too big,cancel it and return the payment ticket form again (with an additional error message)
 
                     // cancel the payment ticket
-
-                    stringResponse = httpService.manageTransact(configuration, numTransac, response.getId(), TransactionType.CANCEL_TRANSACTION);
-
-                    paymentResponse = handleSetAnnulTransacResponse(stringResponse, numTransac, request);
+                    stringResponse = httpService.manageTransact(configuration, partnerTransactionId, response.getId(), TransactionType.CANCEL_TRANSACTION);
+                    paymentResponse = handleSetAnnulTransacResponse(stringResponse, partnerTransactionId, request);
                     break;
             }
         }
@@ -291,6 +259,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .withRequestData(requestContextMap)
                     .build();
 
+            // return the form to ask for a new payment ticket
             paymentResponse = PaymentResponseFormUpdated.PaymentResponseFormUpdatedBuilder.aPaymentResponseFormUpdated()
                     .withPaymentFormConfigurationResponse(paymentFormConfigurationResponse)
                     .withRequestContext(requestContext)
@@ -313,65 +282,6 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return paymentResponse;
-    }
-
-
-    /**
-     * Finalize the payment
-     *
-     * @param request
-     * @return PaymentResponseSuccess or Failure, depend on the case
-     */
-    public PaymentResponse step3(PaymentRequest request) {
-        if (request.getRequestContext() == null
-                || request.getRequestContext().getRequestData().get(RequestContextKeys.NUMTRANSAC) == null) {
-            throw new InvalidDataException("issues with the numTransac in the requestContext");
-        }
-
-        if (request.getPaymentFormContext() == null
-                || request.getPaymentFormContext().getSensitivePaymentFormParameter() == null) {
-            throw new InvalidDataException("form parameter Map is missing");
-        }
-        Map<String, String> parameters = request.getPaymentFormContext().getPaymentFormParameter();
-        Map<String, String> sensitiveParameters = request.getPaymentFormContext().getSensitivePaymentFormParameter();
-
-        // Only CardKey & ExpirationDateKey are mandatory by the CardBuilder
-        if (PluginUtils.isEmpty(sensitiveParameters.get(CardForm.CARD_KEY))) {
-            throw new InvalidDataException("Card is missing in paymentFormParameters");
-        }
-        if (PluginUtils.isEmpty(parameters.get(CardForm.EXPIRATION_DATE_KEY))) {
-            throw new InvalidDataException("Expiry date is missing in paymentFormParameters");
-        }
-
-        // extract needed data
-        // transaction data
-        String partnerTransactionId = request.getRequestContext().getRequestData().get(RequestContextKeys.NUMTRANSAC);
-
-        // card data
-        String pan = sensitiveParameters.get(CardForm.CARD_KEY);
-        String cvx = sensitiveParameters.get(CardForm.CVX_KEY);
-        String expiry = parameters.get(CardForm.EXPIRATION_DATE_KEY);
-        String holder = parameters.get(CardForm.HOLDERNAME_KEY);
-        YearMonth yearMonth = PluginUtils.createYearMonthFromExpiry(expiry);
-
-        Card card = Card.CardBuilder
-                .aCard()
-                .withPan(pan)
-                .withCvx(cvx)
-                .withExpirationDate(yearMonth)
-                .withHolder(holder)
-                .build();
-
-        PaymentMode cardMode = PaymentModeCard.PaymentModeCardBuilder
-                .aPaymentModeCard()
-                .withCard(card)
-                .build();
-
-        return PaymentResponseDoPayment.PaymentResponseDoPaymentBuilder
-                .aPaymentResponseDoPayment()
-                .withPartnerTransactionId(partnerTransactionId)
-                .withPaymentMode(cardMode)
-                .build();
     }
 
 
