@@ -72,38 +72,6 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         password.setRequired(true);
         parameters.add(password);
 
-        final NetworkListBoxParameter networkCb = new NetworkListBoxParameter();
-        networkCb.setKey(AvailableNetwork.CB.getKey());
-        networkCb.setLabel(i18n.getMessage(ContractConfigurationKeys.CB_PROPERTY_LABEL, locale));
-        networkCb.setDescription(i18n.getMessage(ContractConfigurationKeys.CB_PROPERTY_DESCRIPTION, locale));
-        networkCb.setNetwork(AvailableNetwork.CB);
-
-        parameters.add(networkCb);
-
-        final NetworkListBoxParameter networkVisa = new NetworkListBoxParameter();
-        networkVisa.setKey(AvailableNetwork.VISA.getKey());
-        networkVisa.setLabel(i18n.getMessage(ContractConfigurationKeys.VISA_PROPERTY_LABEL, locale));
-        networkVisa.setDescription(i18n.getMessage(ContractConfigurationKeys.VISA_PROPERTY_DESCRIPTION, locale));
-        networkVisa.setNetwork(AvailableNetwork.VISA);
-
-        parameters.add(networkVisa);
-
-        final NetworkListBoxParameter networkMastercard = new NetworkListBoxParameter();
-        networkMastercard.setKey(AvailableNetwork.MASTERCARD.getKey());
-        networkMastercard.setLabel(i18n.getMessage(ContractConfigurationKeys.MASTERCARD_PROPERTY_LABEL, locale));
-        networkMastercard.setDescription(i18n.getMessage(ContractConfigurationKeys.MASTERCARD_PROPERTY_DESCRIPTION, locale));
-        networkMastercard.setNetwork(AvailableNetwork.MASTERCARD);
-
-        parameters.add(networkMastercard);
-
-        final NetworkListBoxParameter networkAmex = new NetworkListBoxParameter();
-        networkAmex.setKey(AvailableNetwork.AMEX.getKey());
-        networkAmex.setLabel(i18n.getMessage(ContractConfigurationKeys.AMEX_PROPERTY_LABEL, locale));
-        networkAmex.setDescription(i18n.getMessage(ContractConfigurationKeys.AMEX_PROPERTY_DESCRIPTION, locale));
-        networkAmex.setNetwork(AvailableNetwork.AMEX);
-
-        parameters.add(networkAmex);
-
         return parameters;
     }
 
