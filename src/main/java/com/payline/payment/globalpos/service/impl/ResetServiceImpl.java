@@ -25,7 +25,6 @@ public class ResetServiceImpl implements ResetService {
     private HttpService httpService = HttpService.getInstance();
 
 
-
     @Override
     public ResetResponse resetRequest(ResetRequest request) {
         ResetResponse resetResponse;
@@ -41,44 +40,7 @@ public class ResetServiceImpl implements ResetService {
             LoginBody loginBody = new LoginBody(id, password, guid);
             GetAuthToken tokenResponse = httpService.getAuthToken(configuration, loginBody);
             if (tokenResponse.isOk()) {
-                String token = tokenResponse.getToken();
-                String date = PluginUtils.computeDate();
-                String email = request.getBuyer().getEmail();
-                String magCaisse = PluginUtils.createStoreId(
-                        configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.CODEMAGASIN).getValue()
-                        , configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.NUMEROCAISSE).getValue()
-                );
-
-                CreateCardBody createCardBody = CreateCardBody.builder()
-                        .action(CreateCardBody.Action.CREATION.name())
-                        .dateTransac(date)
-                        .email(email)
-                        .magCaisse(magCaisse)
-                        .montant(request.getAmount().getAmountInSmallestUnit().intValue())
-                        .numTransac(request.getTransactionId())
-                        .typeTitre(CreateCardBody.Title.TITRE940001.getTitre())
-                        .build();
-
-                // ask for a new payment ticket
-                SetCreateCard cardResponse = httpService.setCreateCard(configuration, token, createCardBody);
-                if (cardResponse.isOk()) {
-                    String cardId = cardResponse.getCard().getCardId();
-
-
-                    // ask for validation and email sending
-                    JsonBeanResponse sendMailResponse = httpService.setGenCardMail(configuration, token, cardId);
-                    if (sendMailResponse.isOk()) {
-                        resetResponse = ResetResponseSuccess.ResetResponseSuccessBuilder
-                                .aResetResponseSuccess()
-                                .withPartnerTransactionId(request.getPartnerTransactionId())
-                                .withStatusCode("0") // sendMailResponse.error = 0 when OK
-                                .build();
-                    } else {
-                        resetResponse = responseFailure(partnerTransactionId, sendMailResponse);
-                    }
-                } else {
-                    resetResponse = responseFailure(partnerTransactionId, cardResponse);
-                }
+                resetResponse =   askForNewTicket(configuration, tokenResponse, request, partnerTransactionId);
             } else {
                 resetResponse = responseFailure(partnerTransactionId, tokenResponse);
             }
@@ -98,13 +60,14 @@ public class ResetServiceImpl implements ResetService {
 
     @Override
     public boolean canMultiple() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean canPartial() {
-        return false;
+        return true;
     }
+
 
     /**
      * Create the ResponseFailure
@@ -112,7 +75,7 @@ public class ResetServiceImpl implements ResetService {
      * @param response the responseError return by the API GlobalPOS
      * @return PaymentResponseFailure
      */
-    public ResetResponseFailure responseFailure(String partnerTransactionId, JsonBeanResponse response) {
+    private ResetResponseFailure responseFailure(String partnerTransactionId, JsonBeanResponse response) {
         LOGGER.info("Failure While calling API:{}", response);
         return ResetResponseFailure.ResetResponseFailureBuilder
                 .aResetResponseFailure()
@@ -120,5 +83,56 @@ public class ResetServiceImpl implements ResetService {
                 .withErrorCode(PluginUtils.truncate(response.getMessage().trim(), 50))
                 .withFailureCause(PluginUtils.getFailureCause(response.getError()))
                 .build();
+    }
+
+
+    private ResetResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId){
+        String cardId = cardResponse.getCard().getCardId();
+        ResetResponse resetResponse;
+
+        // ask for validation and email sending
+        JsonBeanResponse sendMailResponse = httpService.setGenCardMail(configuration, token, cardId);
+        if (sendMailResponse.isOk()) {
+            resetResponse = ResetResponseSuccess.ResetResponseSuccessBuilder
+                    .aResetResponseSuccess()
+                    .withPartnerTransactionId(partnerTransactionId)
+                    .withStatusCode("0") // sendMailResponse.error = 0 when OK
+                    .build();
+        } else {
+            resetResponse = responseFailure(partnerTransactionId, sendMailResponse);
+        }
+
+        return resetResponse;
+    }
+
+    private ResetResponse askForNewTicket(RequestConfiguration configuration, GetAuthToken tokenResponse, ResetRequest request, String partnerTransactionId){
+        ResetResponse resetResponse;
+
+        String token = tokenResponse.getToken();
+        String date = PluginUtils.computeDate();
+        String email = request.getBuyer().getEmail();
+        String magCaisse = PluginUtils.createStoreId(
+                configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.CODEMAGASIN).getValue()
+                , configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.NUMEROCAISSE).getValue()
+        );
+
+        CreateCardBody createCardBody = CreateCardBody.builder()
+                .action(CreateCardBody.Action.CREATION.name())
+                .dateTransac(date)
+                .email(email)
+                .magCaisse(magCaisse)
+                .montant(request.getAmount().getAmountInSmallestUnit().intValue())
+                .numTransac(request.getTransactionId())
+                .typeTitre(CreateCardBody.Title.TITLE940001.getName())
+                .build();
+
+        // ask for a new payment ticket
+        SetCreateCard cardResponse = httpService.setCreateCard(configuration, token, createCardBody);
+        if (cardResponse.isOk()) {
+            return askForValidation(configuration, cardResponse, token, partnerTransactionId);
+        } else {
+            resetResponse = responseFailure(partnerTransactionId, cardResponse);
+        }
+        return resetResponse;
     }
 }

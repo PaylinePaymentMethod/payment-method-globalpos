@@ -40,44 +40,7 @@ public class RefundServiceImpl implements RefundService {
             LoginBody loginBody = new LoginBody(id, password, guid);
             GetAuthToken tokenResponse = httpService.getAuthToken(configuration, loginBody);
             if (tokenResponse.isOk()) {
-                String token = tokenResponse.getToken();
-                String date = PluginUtils.computeDate();
-                String email = request.getBuyer().getEmail();
-                String magCaisse = PluginUtils.createStoreId(
-                        configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.CODEMAGASIN).getValue()
-                        , configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.NUMEROCAISSE).getValue()
-                );
-
-                CreateCardBody createCardBody = CreateCardBody.builder()
-                        .action(CreateCardBody.Action.CREATION.name())
-                        .dateTransac(date)
-                        .email(email)
-                        .magCaisse(magCaisse)
-                        .montant(request.getAmount().getAmountInSmallestUnit().intValue())
-                        .numTransac(request.getTransactionId())
-                        .typeTitre(CreateCardBody.Title.TITRE940001.getTitre())
-                        .build();
-
-                // ask for a new payment ticket
-                SetCreateCard cardResponse = httpService.setCreateCard(configuration, token, createCardBody);
-                if (cardResponse.isOk()) {
-                    String cardId = cardResponse.getCard().getCardId();
-
-
-                    // ask for validation and email sending
-                    JsonBeanResponse sendMailResponse = httpService.setGenCardMail(configuration, token, cardId);
-                    if (sendMailResponse.isOk()) {
-                        refundResponse = RefundResponseSuccess.RefundResponseSuccessBuilder
-                                .aRefundResponseSuccess()
-                                .withPartnerTransactionId(request.getPartnerTransactionId())
-                                .withStatusCode("0") // sendMailResponse.error = 0 when OK
-                                .build();
-                    } else {
-                        refundResponse = responseFailure(partnerTransactionId, sendMailResponse);
-                    }
-                } else {
-                    refundResponse = responseFailure(partnerTransactionId, cardResponse);
-                }
+                return  askForNewTicket(configuration, tokenResponse, request, partnerTransactionId);
             } else {
                 refundResponse = responseFailure(partnerTransactionId, tokenResponse);
             }
@@ -120,5 +83,56 @@ public class RefundServiceImpl implements RefundService {
                 .withErrorCode(PluginUtils.truncate(response.getMessage().trim(), 50))
                 .withFailureCause(PluginUtils.getFailureCause(response.getError()))
                 .build();
+    }
+
+
+    private RefundResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId){
+        String cardId = cardResponse.getCard().getCardId();
+        RefundResponse refundResponse;
+
+        // ask for validation and email sending
+        JsonBeanResponse sendMailResponse = httpService.setGenCardMail(configuration, token, cardId);
+        if (sendMailResponse.isOk()) {
+            refundResponse = RefundResponseSuccess.RefundResponseSuccessBuilder
+                    .aRefundResponseSuccess()
+                    .withPartnerTransactionId(partnerTransactionId)
+                    .withStatusCode("0") // sendMailResponse.error = 0 when OK
+                    .build();
+        } else {
+            refundResponse = responseFailure(partnerTransactionId, sendMailResponse);
+        }
+
+        return refundResponse;
+    }
+
+    private RefundResponse askForNewTicket(RequestConfiguration configuration, GetAuthToken tokenResponse, RefundRequest request, String partnerTransactionId){
+        RefundResponse refundResponse;
+
+        String token = tokenResponse.getToken();
+        String date = PluginUtils.computeDate();
+        String email = request.getBuyer().getEmail();
+        String magCaisse = PluginUtils.createStoreId(
+                configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.CODEMAGASIN).getValue()
+                , configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.NUMEROCAISSE).getValue()
+        );
+
+        CreateCardBody createCardBody = CreateCardBody.builder()
+                .action(CreateCardBody.Action.CREATION.name())
+                .dateTransac(date)
+                .email(email)
+                .magCaisse(magCaisse)
+                .montant(request.getAmount().getAmountInSmallestUnit().intValue())
+                .numTransac(request.getTransactionId())
+                .typeTitre(CreateCardBody.Title.TITLE940001.getName())
+                .build();
+
+        // ask for a new payment ticket
+        SetCreateCard cardResponse = httpService.setCreateCard(configuration, token, createCardBody);
+        if (cardResponse.isOk()) {
+            refundResponse = askForValidation(configuration, cardResponse, token, partnerTransactionId);
+        } else {
+            refundResponse = responseFailure(partnerTransactionId, cardResponse);
+        }
+        return refundResponse;
     }
 }

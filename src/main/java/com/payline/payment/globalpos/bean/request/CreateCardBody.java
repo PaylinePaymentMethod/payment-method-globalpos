@@ -46,16 +46,16 @@ public class CreateCardBody {
     }
 
     public enum Title {
-        TITRE940001("940001");
+        TITLE940001("940001");
 
-        private String titre;
+        private String name;
 
-        Title(String s) {
-            this.titre = s;
+        Title(String name) {
+            this.name = name;
         }
 
-        public String getTitre() {
-            return titre;
+        public String getName() {
+            return name;
         }
     }
 }
