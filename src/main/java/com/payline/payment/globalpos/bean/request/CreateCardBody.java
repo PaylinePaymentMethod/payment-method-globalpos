@@ -40,4 +40,22 @@ public class CreateCardBody {
                 .create();
         return gson.toJson(this);
     }
+
+    public enum Action {
+        CREATION
+    }
+
+    public enum Title {
+        TITRE940001("940001");
+
+        private String titre;
+
+        Title(String s) {
+            this.titre = s;
+        }
+
+        public String getTitre() {
+            return titre;
+        }
+    }
 }

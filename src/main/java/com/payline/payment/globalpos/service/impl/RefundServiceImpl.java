@@ -49,13 +49,13 @@ public class RefundServiceImpl implements RefundService {
                 );
 
                 CreateCardBody createCardBody = CreateCardBody.builder()
-                        .action("CREATION")
+                        .action(CreateCardBody.Action.CREATION.name())
                         .dateTransac(date)
                         .email(email)
                         .magCaisse(magCaisse)
                         .montant(request.getAmount().getAmountInSmallestUnit().intValue())
                         .numTransac(request.getTransactionId())
-                        .typeTitre("940001")
+                        .typeTitre(CreateCardBody.Title.TITRE940001.getTitre())
                         .build();
 
                 // ask for a new payment ticket
@@ -112,7 +112,7 @@ public class RefundServiceImpl implements RefundService {
      * @param response the responseError return by the API GlobalPOS
      * @return PaymentResponseFailure
      */
-    public RefundResponseFailure responseFailure(String partnerTransactionId, JsonBeanResponse response) {
+    private RefundResponseFailure responseFailure(String partnerTransactionId, JsonBeanResponse response) {
         LOGGER.info("Failure While calling API:{}", response);
         return RefundResponseFailure.RefundResponseFailureBuilder
                 .aRefundResponseFailure()

@@ -76,6 +76,52 @@ public class MockUtils {
 
     private static final String password = "password";
 
+    @Getter
+    private static final String GOOD_TOKEN_RESPONSE = "{\n" +
+            "    \"error\": 0,\n" +
+            "    \"message\": \"\",\n" +
+            "    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6IktJQUJJX1dTIiwidHlwZSI6IkpXVCJ9.eyJleHAiOjE1OTQ2NTE3NDYsImp0aSI6IjgxOWVkOWRjN2Y4NTA3NWU3NzEwNDMwNzJhNmU4NjgxIn0.qWmcFoawdaKz86xxNBlexny7IPLku3Wlxw_-7yaZPR2bMX0OS8MXpGGXXosJhyHUZV6P5p8yf5xEf_dcmTTfgA\"\n" +
+            "}";
+
+    @Getter
+    private static final String BAD_TOKEN_RESPONSE = "{\n" +
+            "    \"error\": 78,\n" +
+            "    \"message\": \"Erreur authentification\",\n" +
+            "    \"detail\": \"Le login ou le password n’est pas reconnu\"\n" +
+            "}";
+
+    @Getter
+    private static final String GOOD_CARD_RESPONSE = "{\n" +
+            "    \"error\": 0,\n" +
+            "    \"message\": \"\",\n" +
+            "    \"cartes\": {\n" +
+            "        \"cardid\": \"2539400019400018828372289117202107203902100000\",\n" +
+            "        \"cardid2\": \"8283722891\",\n" +
+            "        \"cardcvv\": \"\",\n" +
+            "        \"montant\": 1000\n" +
+            "    }\n" +
+            "}";
+
+    @Getter
+    private static final String BAD_CARD_RESPONSE = "{\n" +
+            "    \"error\": -118,\n" +
+            "    \"message\": \" Produit Refuse par l’enseigne \",\n" +
+            "    \"detail\": []\n" +
+            "}";
+
+    @Getter
+    private static final String GOOD_MAIL_RESPONSE = "{\n" +
+            "    \"error\": 0,\n" +
+            "    \"message\": \"\"\n" +
+            "}";
+
+    @Getter
+    private static final String BAD_MAIL_RESPONSE = "{\n" +
+            "    \"error\": -115,\n" +
+            "    \"message\": \"Token expiré \",\n" +
+            "    \"detail\": []\n" +
+            "}";
+
 
     /**------------------------------------------------------------------------------------------------------------------*/
 

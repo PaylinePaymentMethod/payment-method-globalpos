@@ -34,54 +34,13 @@ class RefundServiceImplTest {
         MockitoAnnotations.initMocks(this);
     }
 
-
-    private static final String GOOD_TOKEN_RESPONSE = "{\n" +
-            "    \"error\": 0,\n" +
-            "    \"message\": \"\",\n" +
-            "    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6IktJQUJJX1dTIiwidHlwZSI6IkpXVCJ9.eyJleHAiOjE1OTQ2NTE3NDYsImp0aSI6IjgxOWVkOWRjN2Y4NTA3NWU3NzEwNDMwNzJhNmU4NjgxIn0.qWmcFoawdaKz86xxNBlexny7IPLku3Wlxw_-7yaZPR2bMX0OS8MXpGGXXosJhyHUZV6P5p8yf5xEf_dcmTTfgA\"\n" +
-            "}";
-
-    private static final String BAD_TOKEN_RESPONSE = "{\n" +
-            "    \"error\": 78,\n" +
-            "    \"message\": \"Erreur authentification\",\n" +
-            "    \"detail\": \"Le login ou le password n’est pas reconnu\"\n" +
-            "}";
-
-    private static final String GOOD_CARD_RESPONSE = "{\n" +
-            "    \"error\": 0,\n" +
-            "    \"message\": \"\",\n" +
-            "    \"cartes\": {\n" +
-            "        \"cardid\": \"2539400019400018828372289117202107203902100000\",\n" +
-            "        \"cardid2\": \"8283722891\",\n" +
-            "        \"cardcvv\": \"\",\n" +
-            "        \"montant\": 1000\n" +
-            "    }\n" +
-            "}";
-
-    private static final String BAD_CARD_RESPONSE = "{\n" +
-            "    \"error\": -118,\n" +
-            "    \"message\": \" Produit Refuse par l’enseigne \",\n" +
-            "    \"detail\": []\n" +
-            "}";
-
-    private static final String GOOD_MAIL_RESPONSE = "{\n" +
-            "    \"error\": 0,\n" +
-            "    \"message\": \"\"\n" +
-            "}";
-
-    private static final String BAD_MAIL_RESPONSE = "{\n" +
-            "    \"error\": -115,\n" +
-            "    \"message\": \"Token expiré \",\n" +
-            "    \"detail\": []\n" +
-            "}";
-
     @Test
     void refundRequestOK() {
 
         // create mock
-        GetAuthToken tokenResponse = GetAuthToken.fromJson(GOOD_TOKEN_RESPONSE);
-        SetCreateCard cardResponse = SetCreateCard.fromJson(GOOD_CARD_RESPONSE);
-        JsonBeanResponse mailResponse = JsonBeanResponse.fromJson(GOOD_MAIL_RESPONSE);
+        GetAuthToken tokenResponse = GetAuthToken.fromJson(MockUtils.getGOOD_TOKEN_RESPONSE());
+        SetCreateCard cardResponse = SetCreateCard.fromJson(MockUtils.getGOOD_CARD_RESPONSE());
+        JsonBeanResponse mailResponse = JsonBeanResponse.fromJson(MockUtils.getGOOD_MAIL_RESPONSE());
 
         Mockito.doReturn(tokenResponse).when(httpService).getAuthToken(any(), any());
         Mockito.doReturn(cardResponse).when(httpService).setCreateCard(any(), any(), any());
@@ -104,7 +63,7 @@ class RefundServiceImplTest {
     void refundRequestKOToken() {
 
         // create mock
-        GetAuthToken tokenResponse = GetAuthToken.fromJson(BAD_TOKEN_RESPONSE);
+        GetAuthToken tokenResponse = GetAuthToken.fromJson(MockUtils.getBAD_TOKEN_RESPONSE());
 
         Mockito.doReturn(tokenResponse).when(httpService).getAuthToken(any(), any());
         Mockito.verify(httpService, never()).setCreateCard(any(), any(), any());
@@ -128,8 +87,8 @@ class RefundServiceImplTest {
     void refundRequestKOCard() {
 
         // create mock
-        GetAuthToken tokenResponse = GetAuthToken.fromJson(GOOD_TOKEN_RESPONSE);
-        SetCreateCard cardResponse = SetCreateCard.fromJson(BAD_CARD_RESPONSE);
+        GetAuthToken tokenResponse = GetAuthToken.fromJson(MockUtils.getGOOD_TOKEN_RESPONSE());
+        SetCreateCard cardResponse = SetCreateCard.fromJson(MockUtils.getBAD_CARD_RESPONSE());
 
         Mockito.doReturn(tokenResponse).when(httpService).getAuthToken(any(), any());
         Mockito.doReturn(cardResponse).when(httpService).setCreateCard(any(), any(), any());
@@ -153,9 +112,9 @@ class RefundServiceImplTest {
     void refundRequestKOMail() {
 
         // create mock
-        GetAuthToken tokenResponse = GetAuthToken.fromJson(GOOD_TOKEN_RESPONSE);
-        SetCreateCard cardResponse = SetCreateCard.fromJson(GOOD_CARD_RESPONSE);
-        JsonBeanResponse mailResponse = JsonBeanResponse.fromJson(BAD_MAIL_RESPONSE);
+        GetAuthToken tokenResponse = GetAuthToken.fromJson(MockUtils.getGOOD_TOKEN_RESPONSE());
+        SetCreateCard cardResponse = SetCreateCard.fromJson(MockUtils.getGOOD_CARD_RESPONSE());
+        JsonBeanResponse mailResponse = JsonBeanResponse.fromJson(MockUtils.getBAD_MAIL_RESPONSE());
 
         Mockito.doReturn(tokenResponse).when(httpService).getAuthToken(any(), any());
         Mockito.doReturn(cardResponse).when(httpService).setCreateCard(any(), any(), any());
@@ -228,7 +187,4 @@ class RefundServiceImplTest {
         Assertions.assertTrue(service.canPartial());
     }
 
-    @Test
-    void responseFailure() {
-    }
 }
