@@ -40,6 +40,11 @@ public class HttpService {
     }
     // --- Singleton Holder pattern + initialization END
 
+    protected Header[] initHeaders(String token) {
+        return new Header[]{
+                new BasicHeader("Content-Type", "application/json"),
+                new BasicHeader(TOKEN, token)};
+    }
 
     /**
      * Initialize a GlobalPOS transaction
@@ -124,9 +129,10 @@ public class HttpService {
         // create the url
         String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
         URI uri = URIService.createGetAuthTokenURL(baseUrl);
+        Header[] headers = new Header[]{new BasicHeader("Content-Type", "application/json")};
 
         // call API
-        StringResponse response = client.post(uri, null, body.toJson());
+        StringResponse response = client.post(uri, headers, body.toJson());
 
         // verify the response
         if (!response.isSuccess()) {
@@ -144,10 +150,9 @@ public class HttpService {
         // create the url
         String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
         URI uri = URIService.createSetCreateCardURL(baseUrl);
-        Header[] headers = new Header[]{new BasicHeader(TOKEN, token)};
 
         // call API
-        StringResponse response = client.post(uri, headers, body.toJson());
+        StringResponse response = client.post(uri, initHeaders(token), body.toJson());
 
         // verify the response
         if (!response.isSuccess()) {
@@ -165,10 +170,9 @@ public class HttpService {
         // create the url
         String baseUrl = configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.URL);
         URI uri = URIService.createSetGenCardMailURL(baseUrl, cardId, "1"); // we always want the API to send an email
-        Header[] headers = new Header[]{new BasicHeader(TOKEN, token)};
 
         // call API
-        StringResponse response = client.get(uri, headers);
+        StringResponse response = client.get(uri, initHeaders(token));
 
         // verify response
         if (!response.isSuccess()) {

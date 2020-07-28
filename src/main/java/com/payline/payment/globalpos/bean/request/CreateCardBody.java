@@ -1,7 +1,7 @@
 package com.payline.payment.globalpos.bean.request;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,14 +14,17 @@ public class CreateCardBody {
 
     @Getter
     @NonNull
+    @SerializedName("datetransac")
     private String dateTransac;
 
     @Getter
     @NonNull
+    @SerializedName("typetitre")
     private String typeTitre;
 
     @Getter
     @NonNull
+    @SerializedName("magcaisse")
     private String magCaisse;
 
     @Getter
@@ -35,13 +38,11 @@ public class CreateCardBody {
     private int montant;
 
     @Getter
+    @SerializedName("numtransac")
     private String numTransac;
 
     public String toJson() {
-        Gson gson = new GsonBuilder()
-                .disableHtmlEscaping()
-                .create();
-        return gson.toJson(this);
+        return new GsonBuilder().create().toJson(this);
     }
 
     /**

@@ -72,9 +72,9 @@ public class MockUtils {
     @Getter
     private static final String numTransac = "5e7db72846ebd";
 
-    private static final String id = "1233123";
+    private static final String id = "KIABI_WS";
 
-    private static final String password = "password";
+    private static final String password = "ebf40ee3e3af673637ddd4ec8c6908fa";
 
     @Getter
     private static final String GOOD_TOKEN_RESPONSE = "{\n" +
