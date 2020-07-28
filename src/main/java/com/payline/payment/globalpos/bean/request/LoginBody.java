@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * Class used to create the body of the getAuthToken API call
+ */
 @AllArgsConstructor
 public class LoginBody {
 

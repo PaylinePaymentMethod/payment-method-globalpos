@@ -1,4 +1,4 @@
-package com.payline.payment.globalpos.bean;
+package com.payline.payment.globalpos.utils;
 
 import com.payline.pmapi.bean.common.Amount;
 

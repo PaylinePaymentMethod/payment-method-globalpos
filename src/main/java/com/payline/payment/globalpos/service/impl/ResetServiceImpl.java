@@ -6,6 +6,7 @@ import com.payline.payment.globalpos.bean.request.LoginBody;
 import com.payline.payment.globalpos.bean.response.GetAuthToken;
 import com.payline.payment.globalpos.bean.response.JsonBeanResponse;
 import com.payline.payment.globalpos.bean.response.SetCreateCard;
+import com.payline.payment.globalpos.exception.InvalidDataException;
 import com.payline.payment.globalpos.exception.PluginException;
 import com.payline.payment.globalpos.service.HttpService;
 import com.payline.payment.globalpos.utils.PluginUtils;
@@ -32,6 +33,11 @@ public class ResetServiceImpl implements ResetService {
         try {
             final RequestConfiguration configuration = RequestConfiguration.build(request);
 
+            // check if the email is present, if not stop the process and return a failure
+            if (request.getBuyer() == null || PluginUtils.isEmpty(request.getBuyer().getEmail())) {
+                throw new InvalidDataException("email is missing");
+            }
+
             // get the access token
             String id = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.ID).getValue();
             String password = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.PASSWORD).getValue();
@@ -40,13 +46,15 @@ public class ResetServiceImpl implements ResetService {
             LoginBody loginBody = new LoginBody(id, password, guid);
             GetAuthToken tokenResponse = httpService.getAuthToken(configuration, loginBody);
             if (tokenResponse.isOk()) {
-                resetResponse =   askForNewTicket(configuration, tokenResponse, request, partnerTransactionId);
+                resetResponse = askForNewTicket(configuration, tokenResponse, request, partnerTransactionId);
             } else {
                 resetResponse = responseFailure(partnerTransactionId, tokenResponse);
             }
         } catch (PluginException e) {
+            LOGGER.error(e.getMessage(), e);
             resetResponse = e.toResetResponseFailureBuilder().withPartnerTransactionId(partnerTransactionId).build();
         } catch (RuntimeException e) {
+            LOGGER.error("Unexpected plugin error", e);
             resetResponse = ResetResponseFailure.ResetResponseFailureBuilder
                     .aResetResponseFailure()
                     .withPartnerTransactionId(partnerTransactionId)
@@ -86,7 +94,7 @@ public class ResetServiceImpl implements ResetService {
     }
 
 
-    private ResetResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId){
+    private ResetResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId) {
         String cardId = cardResponse.getCard().getCardId();
         ResetResponse resetResponse;
 
@@ -105,7 +113,7 @@ public class ResetServiceImpl implements ResetService {
         return resetResponse;
     }
 
-    private ResetResponse askForNewTicket(RequestConfiguration configuration, GetAuthToken tokenResponse, ResetRequest request, String partnerTransactionId){
+    private ResetResponse askForNewTicket(RequestConfiguration configuration, GetAuthToken tokenResponse, ResetRequest request, String partnerTransactionId) {
         ResetResponse resetResponse;
 
         String token = tokenResponse.getToken();
@@ -129,7 +137,7 @@ public class ResetServiceImpl implements ResetService {
         // ask for a new payment ticket
         SetCreateCard cardResponse = httpService.setCreateCard(configuration, token, createCardBody);
         if (cardResponse.isOk()) {
-            return askForValidation(configuration, cardResponse, token, partnerTransactionId);
+            resetResponse = askForValidation(configuration, cardResponse, token, partnerTransactionId);
         } else {
             resetResponse = responseFailure(partnerTransactionId, cardResponse);
         }

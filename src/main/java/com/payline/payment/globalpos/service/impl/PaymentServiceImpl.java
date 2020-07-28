@@ -1,6 +1,6 @@
 package com.payline.payment.globalpos.service.impl;
 
-import com.payline.payment.globalpos.bean.AmountParse;
+import com.payline.payment.globalpos.utils.AmountParse;
 import com.payline.payment.globalpos.bean.configuration.RequestConfiguration;
 import com.payline.payment.globalpos.bean.response.APIResponseError;
 import com.payline.payment.globalpos.bean.response.GetTitreDetailTransac;

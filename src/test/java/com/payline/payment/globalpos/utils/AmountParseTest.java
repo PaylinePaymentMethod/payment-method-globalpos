@@ -1,5 +1,6 @@
-package com.payline.payment.globalpos.bean;
+package com.payline.payment.globalpos.utils;
 
+import com.payline.payment.globalpos.utils.AmountParse;
 import com.payline.pmapi.bean.common.Amount;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

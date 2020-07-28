@@ -86,12 +86,15 @@ public class PluginUtils {
 
     /**
      * concatenate storeCode and checkoutNumber with a pipe to obtain the final shopId
+     *
      * @param storeCode
      * @param checkoutNumber
      * @return
      */
-    public static String createStoreId(String storeCode, String checkoutNumber){
-        if (isEmpty(checkoutNumber)) checkoutNumber = "00"; // default Value for the "numéro de caisse"
+    public static String createStoreId(String storeCode, String checkoutNumber) {
+        if (isEmpty(checkoutNumber)) {
+            checkoutNumber = "00"; // default Value for the "numéro de caisse"
+        }
         return String.join(PIPE, storeCode, checkoutNumber);
     }
 }

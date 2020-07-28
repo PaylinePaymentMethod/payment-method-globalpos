@@ -6,6 +6,7 @@ import com.payline.payment.globalpos.bean.request.LoginBody;
 import com.payline.payment.globalpos.bean.response.GetAuthToken;
 import com.payline.payment.globalpos.bean.response.JsonBeanResponse;
 import com.payline.payment.globalpos.bean.response.SetCreateCard;
+import com.payline.payment.globalpos.exception.InvalidDataException;
 import com.payline.payment.globalpos.exception.PluginException;
 import com.payline.payment.globalpos.service.HttpService;
 import com.payline.payment.globalpos.utils.PluginUtils;
@@ -32,6 +33,11 @@ public class RefundServiceImpl implements RefundService {
         try {
             final RequestConfiguration configuration = RequestConfiguration.build(request);
 
+            // check if the email is present, if not stop the process and return a failure
+            if (request.getBuyer() == null || PluginUtils.isEmpty(request.getBuyer().getEmail())) {
+                throw new InvalidDataException("email is missing");
+            }
+
             // get the access token
             String id = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.ID).getValue();
             String password = configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.PASSWORD).getValue();
@@ -40,13 +46,15 @@ public class RefundServiceImpl implements RefundService {
             LoginBody loginBody = new LoginBody(id, password, guid);
             GetAuthToken tokenResponse = httpService.getAuthToken(configuration, loginBody);
             if (tokenResponse.isOk()) {
-                return  askForNewTicket(configuration, tokenResponse, request, partnerTransactionId);
+                refundResponse = askForNewTicket(configuration, tokenResponse, request, partnerTransactionId);
             } else {
                 refundResponse = responseFailure(partnerTransactionId, tokenResponse);
             }
         } catch (PluginException e) {
+            LOGGER.error(e.getMessage(), e);
             refundResponse = e.toRefundResponseFailureBuilder().withPartnerTransactionId(partnerTransactionId).build();
         } catch (RuntimeException e) {
+            LOGGER.error("Unexpected plugin error", e);
             refundResponse = RefundResponseFailure.RefundResponseFailureBuilder
                     .aRefundResponseFailure()
                     .withPartnerTransactionId(partnerTransactionId)
@@ -86,7 +94,7 @@ public class RefundServiceImpl implements RefundService {
     }
 
 
-    private RefundResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId){
+    private RefundResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId) {
         String cardId = cardResponse.getCard().getCardId();
         RefundResponse refundResponse;
 
@@ -105,7 +113,7 @@ public class RefundServiceImpl implements RefundService {
         return refundResponse;
     }
 
-    private RefundResponse askForNewTicket(RequestConfiguration configuration, GetAuthToken tokenResponse, RefundRequest request, String partnerTransactionId){
+    private RefundResponse askForNewTicket(RequestConfiguration configuration, GetAuthToken tokenResponse, RefundRequest request, String partnerTransactionId) {
         RefundResponse refundResponse;
 
         String token = tokenResponse.getToken();

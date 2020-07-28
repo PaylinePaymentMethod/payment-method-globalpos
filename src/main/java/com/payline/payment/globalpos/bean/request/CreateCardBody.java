@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * Class used to create the body of the setCreateCard API call
+ */
 @Builder
 public class CreateCardBody {
 
@@ -41,10 +44,16 @@ public class CreateCardBody {
         return gson.toJson(this);
     }
 
+    /**
+     * Enum containing all possible values for action field
+     */
     public enum Action {
         CREATION
     }
 
+    /**
+     * Enum containing all possible values for typeTitre field
+     */
     public enum Title {
         TITLE940001("940001");
 
