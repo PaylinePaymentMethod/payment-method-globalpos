@@ -7,7 +7,7 @@ import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFor
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class PaymentFormConfigurationServiceImplTest {
+class PaymentFormConfigurationServiceImplTest {
     private PaymentFormConfigurationServiceImpl service = new PaymentFormConfigurationServiceImpl();
 
     @Test
@@ -15,8 +15,8 @@ public class PaymentFormConfigurationServiceImplTest {
         PaymentFormConfigurationRequest request = MockUtils.aPaymentFormConfigurationRequest();
         PaymentFormConfigurationResponse response = service.getPaymentFormConfiguration(request);
 
-        Assertions.assertEquals("Choisissez votre banque",((PaymentFormConfigurationResponseSpecific)response).getPaymentForm().getDescription());
-        Assertions.assertEquals("Payer avec GlobalPos",((PaymentFormConfigurationResponseSpecific)response).getPaymentForm().getButtonText());
+        Assertions.assertEquals("",((PaymentFormConfigurationResponseSpecific)response).getPaymentForm().getDescription());
+        Assertions.assertEquals("Payer",((PaymentFormConfigurationResponseSpecific)response).getPaymentForm().getButtonText());
         Assertions.assertEquals(PaymentFormConfigurationResponseSpecific.class, response.getClass());
 
     }

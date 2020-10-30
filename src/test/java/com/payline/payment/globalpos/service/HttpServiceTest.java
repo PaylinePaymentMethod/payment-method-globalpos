@@ -30,9 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 
 class HttpServiceTest {
-    private final String guid = "123";
-    private final String storeCode = "456";
-    private final String checkoutNumber = "789";
+    private static final String guid = "123";
+    private static final String storeCode = "456";
+    private static final String checkoutNumber = "789";
+    private static final String transactionId = MockUtils.getTRANSACTIONID();
+
 
     private RequestConfiguration configuration = new RequestConfiguration(
             MockUtils.aContractConfiguration()
@@ -92,9 +94,11 @@ class HttpServiceTest {
         contractProperties.put(ContractConfigurationKeys.CODEMAGASIN, new ContractProperty(MockUtils.getCodeMagasin()));
         contractProperties.put(ContractConfigurationKeys.NUMEROCAISSE, new ContractProperty(MockUtils.getNumeroCaisse()));
 
-        Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.getTransact(configuration, null, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID()));
+        String transactionId = MockUtils.getTRANSACTIONID();
 
+        Throwable thrown = assertThrows(InvalidDataException.class,
+                () -> httpService.getTransact(configuration, null, storeCode, checkoutNumber, transactionId));
+      
         Assertions.assertEquals("GUID is missing", thrown.getMessage());
     }
 
@@ -110,8 +114,10 @@ class HttpServiceTest {
         contractProperties.put(ContractConfigurationKeys.GUID, new ContractProperty(MockUtils.getGuid()));
         contractProperties.put(ContractConfigurationKeys.NUMEROCAISSE, new ContractProperty(MockUtils.getNumeroCaisse()));
 
+        String transactionId = MockUtils.getTRANSACTIONID();
+
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.getTransact(configuration, guid, null, checkoutNumber, MockUtils.getTRANSACTIONID()));
+                () -> httpService.getTransact(configuration, guid, null, checkoutNumber, transactionId));
 
         Assertions.assertEquals("CODEMAGASIN is missing", thrown.getMessage());
     }
@@ -124,8 +130,10 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
+        String transactionId = MockUtils.getTRANSACTIONID();
+
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.getTransact(configuration, guid, storeCode, checkoutNumber, MockUtils.getTRANSACTIONID()));
+                () -> httpService.getTransact(configuration, guid, storeCode, checkoutNumber, transactionId));
 
         Assertions.assertEquals("GetTransaction wrong data", thrown.getMessage());
 
@@ -155,8 +163,11 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
+
+        String partnerTransactionId = MockUtils.getNumTransac();
+        String title = MockUtils.getTitre();
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), MockUtils.getTitre(), TransactionType.DETAIL_TRANSACTION));
+                () -> httpService.manageTransact(configuration, partnerTransactionId, title, TransactionType.DETAIL_TRANSACTION));
 
         Assertions.assertEquals("DETAIL_TRANSACTION wrong data", thrown.getMessage());
 
@@ -186,8 +197,10 @@ class HttpServiceTest {
                 , null);
         Mockito.doReturn(stringResponse).when(client).get(any(), any());
 
+        String partnerTransactionId = MockUtils.getNumTransac();
+        String name =  PaymentServiceImpl.STATUS.COMMIT.name();
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> httpService.manageTransact(configuration, MockUtils.getNumTransac(), PaymentServiceImpl.STATUS.COMMIT.name(), TransactionType.FINALISE_TRANSACTION));
+                () -> httpService.manageTransact(configuration, partnerTransactionId, name, TransactionType.FINALISE_TRANSACTION));
 
         Assertions.assertEquals("FINALISE_TRANSACTION wrong data", thrown.getMessage());
     }

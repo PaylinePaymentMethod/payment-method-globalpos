@@ -20,7 +20,7 @@ import java.util.Map;
 
 import static com.payline.payment.globalpos.utils.constant.RequestContextKeys.*;
 
-public class PaymentIT {
+class PaymentIT {
 
     private ConfigurationService configurationService = new ConfigurationServiceImpl();
     private PaymentServiceImpl paymentService = new PaymentServiceImpl();

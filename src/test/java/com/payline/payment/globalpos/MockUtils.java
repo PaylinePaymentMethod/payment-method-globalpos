@@ -583,19 +583,6 @@ public class MockUtils {
                 .withSensitiveRequestData(requestSensitiveData);
     }
 
-    public static CustomForm aCustomForm() {
-        I18nService i18n = I18nService.getInstance();
-
-        return CardForm.builder()
-                .withSchemes(new ArrayList<>())
-                .withDescription(i18n.getMessage("customFormCard.description", Locale.FRANCE))
-                .withCustomFields(new ArrayList<>())
-                .withDisplayButton(true)
-                .withButtonText(i18n.getMessage("customFormCard.buttonText", Locale.FRANCE))
-                .build();
-    }
-
-
     public static String getTransacOK() {
         return "<xml>\n" +
                 "  <codeErreur>1</codeErreur>\n" +

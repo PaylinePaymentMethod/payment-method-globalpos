@@ -20,8 +20,10 @@ class GetTransacTest {
 
     @Test
     void noXml() {
+
+        String s = MockUtils.noXml();
         Throwable thrown = assertThrows(InvalidDataException.class,
-                () -> GetTransac.fromXml(MockUtils.noXml()));
+                () -> GetTransac.fromXml(s));
 
         Assertions.assertEquals("Unable to parse XML GetTransac", thrown.getMessage());
     }
