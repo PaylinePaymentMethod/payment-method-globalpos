@@ -6,6 +6,7 @@ import com.payline.payment.globalpos.bean.response.JsonBeanResponse;
 import com.payline.payment.globalpos.bean.response.SetCreateCard;
 import com.payline.payment.globalpos.exception.PluginException;
 import com.payline.payment.globalpos.service.HttpService;
+import com.payline.payment.globalpos.utils.constant.RequestContextKeys;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.refund.response.RefundResponse;
@@ -54,9 +55,10 @@ class RefundServiceImplTest {
         // assertions
         Assertions.assertEquals(RefundResponseSuccess.class, response.getClass());
         RefundResponseSuccess responseSuccess = (RefundResponseSuccess) response;
-
         Assertions.assertEquals(MockUtils.getPARTNER_TRANSACTIONID(), responseSuccess.getPartnerTransactionId());
         Assertions.assertEquals("0", responseSuccess.getStatusCode());
+        Assertions.assertNotNull(responseSuccess.getMiscellaneous());
+        Assertions.assertEquals("2539400019400018828372289117202107203902100000",responseSuccess.getMiscellaneous().get(RequestContextKeys.VOUCHER));
     }
 
     @Test

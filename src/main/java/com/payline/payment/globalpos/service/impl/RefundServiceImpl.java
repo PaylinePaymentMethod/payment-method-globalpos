@@ -11,6 +11,7 @@ import com.payline.payment.globalpos.exception.PluginException;
 import com.payline.payment.globalpos.service.HttpService;
 import com.payline.payment.globalpos.utils.PluginUtils;
 import com.payline.payment.globalpos.utils.constant.ContractConfigurationKeys;
+import com.payline.payment.globalpos.utils.constant.RequestContextKeys;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.refund.response.RefundResponse;
@@ -19,6 +20,9 @@ import com.payline.pmapi.bean.refund.response.impl.RefundResponseSuccess;
 import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.RefundService;
 import org.apache.logging.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class RefundServiceImpl implements RefundService {
@@ -95,8 +99,10 @@ public class RefundServiceImpl implements RefundService {
 
 
     private RefundResponse askForValidation(RequestConfiguration configuration, SetCreateCard cardResponse, String token, String partnerTransactionId) {
+        Map<String, String> miscellaneous = new HashMap<>();
         String cardId = cardResponse.getCard().getCardId();
         RefundResponse refundResponse;
+        miscellaneous.put(RequestContextKeys.VOUCHER, cardId);
 
         // ask for validation and email sending
         JsonBeanResponse sendMailResponse = httpService.setGenCardMail(configuration, token, cardId);
@@ -105,6 +111,7 @@ public class RefundServiceImpl implements RefundService {
                     .aRefundResponseSuccess()
                     .withPartnerTransactionId(partnerTransactionId)
                     .withStatusCode("0") // sendMailResponse.error = 0 when OK
+                    .withMiscellaneous(miscellaneous)
                     .build();
         } else {
             refundResponse = responseFailure(partnerTransactionId, sendMailResponse);

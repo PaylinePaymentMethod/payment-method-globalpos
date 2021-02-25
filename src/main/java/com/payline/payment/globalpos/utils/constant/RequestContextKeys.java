@@ -7,6 +7,8 @@ public class RequestContextKeys {
 
     public static final String NUMTRANSAC = "numTransac";
 
+    public static final String VOUCHER = "voucher";
+
     /* Static utility class : no need to instantiate it (Sonar bug fix) */
     private RequestContextKeys() {
     }
